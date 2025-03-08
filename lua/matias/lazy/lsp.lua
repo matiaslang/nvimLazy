@@ -6,6 +6,7 @@ return {
     dependencies = {
         "williamboman/mason.nvim",
         "williamboman/mason-lspconfig.nvim",
+        "WhoIsSethDaniel/mason-tool-installer.nvim",
         "hrsh7th/cmp-nvim-lsp",
         "hrsh7th/cmp-buffer",
         "hrsh7th/cmp-path",
@@ -41,6 +42,14 @@ return {
 
         -- require("fidget").setup({})
         require("mason").setup({})
+        require("mason-tool-installer").setup({
+            ensure_installed = {
+                "prettier",
+                "stylua",
+                "eslint_d",
+                "pylint"
+            }
+        })
         require("mason-lspconfig").setup({
             ensure_installed = {
                 "angularls",
@@ -60,18 +69,23 @@ return {
             -- capabilities = capabilities
         })
 
-        local languageServerPath = "/Users/matiaslang/.nvm/versions/node/v20.11.0/lib/node_modules/@angular/language-server/"
+        local languageServerPath =
+        "/Users/matiaslang/.nvm/versions/node/v20.11.0/lib/node_modules/@angular/language-server/"
         local cmd = { "ngserver", "--stdio", "--tsProbeLocations", languageServerPath, "--ngProbeLocations",
             languageServerPath }
 
-        require'lspconfig'.angularls.setup({
-            -- on_attach = on_attach,
-            capabilities = capabilities,
-            cmd = cmd,
-            on_new_config = function(new_config, new_root_dir)
-                new_config.cmd = cmd
-            end,
-        })
+        -- require'lspconfig'.angularls.setup({
+        --     -- on_attach = on_attach,
+        --     capabilities = capabilities,
+        --     cmd = cmd,
+        --     on_new_config = function(new_config, new_root_dir)
+        --         new_config.cmd = cmd
+        --     end,
+        -- })
+
+        require 'lspconfig'.angularls.setup {}
+
+
 
         -- Setup nvim-cmp
         local cmp = require('cmp')
