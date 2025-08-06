@@ -123,60 +123,13 @@ return {
 			cmd = { config_path .. "/bin/csharp-ls-wrapper" }
 		})
 
-		-- Angular LSP setup
-		-- Note: This requires Node.js and TypeScript to be installed
-		-- Update the paths below to match your Node.js installation
-		local function setup_angular_lsp()
-			-- Try to find Node.js installation dynamically
-			local node_path = vim.fn.system("which node 2>/dev/null"):gsub("%s+", "")
-			if node_path == "" then
-				print("Warning: Node.js not found. Angular LSP may not work properly.")
-				return
-			end
-			
-			-- Derive lib path from node path
-			local lib_path = node_path:gsub("/bin/node$", "/lib")
-			local typescript_path = lib_path .. "/node_modules/typescript"
-			
-			-- Check if TypeScript is available globally
-			local ts_check = vim.fn.system("test -d " .. typescript_path .. " && echo 'exists'")
-			if ts_check:match("exists") == nil then
-				print("Warning: Global TypeScript not found at " .. typescript_path .. ". Angular LSP may not work properly.")
-			end
-			
-			require("lspconfig").angularls.setup({
-				capabilities = capabilities,
-				filetypes = { "typescript", "html", "typescriptreact", "typescript.tsx" },
-				cmd = {
-					config_path .. "/bin/ngserver",
-					"--stdio",
-					"--tsProbeLocations",
-					typescript_path,
-					"--ngProbeLocations",
-					lib_path,
-				},
-				root_dir = require("lspconfig").util.root_pattern("angular.json", "project.json"),
-				on_new_config = function(new_config, new_root_dir)
-					new_config.cmd = {
-						config_path .. "/bin/ngserver",
-						"--stdio",
-						"--tsProbeLocations",
-						typescript_path,
-						"--ngProbeLocations",
-						new_root_dir,
-					}
-				end,
-				settings = {
-					["ng"] = {
-						typescript = {
-							tsdk = typescript_path .. "/lib",
-						},
-					},
-				},
-			})
-		end
-		
-		setup_angular_lsp()
+		-- Angular LSP setup with simplified configuration
+		-- Uses global TypeScript installation
+		require("lspconfig").angularls.setup({
+			capabilities = capabilities,
+			filetypes = { "typescript", "html", "typescriptreact", "typescript.tsx" },
+			root_dir = require("lspconfig").util.root_pattern("angular.json", "project.json"),
+		})
 
 		-- Setup nvim-cmp
 		local cmp = require("cmp")
