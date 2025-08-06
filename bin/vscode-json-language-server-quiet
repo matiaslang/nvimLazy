@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Wrapper for vscode-json-language-server to suppress warnings
+
+# Check if vscode-json-language-server is available in Mason
+MASON_BIN="$HOME/.local/share/nvim/mason/bin/vscode-json-language-server"
+
+if [ -f "$MASON_BIN" ]; then
+    exec "$MASON_BIN" "$@" 2>/dev/null
+else
+    echo "Error: vscode-json-language-server not found. Please install it via Mason." >&2
+    exit 1
+fi

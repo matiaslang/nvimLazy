@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Wrapper for Angular Language Server (ngserver)
+
+# Check if ngserver is available in Mason
+MASON_BIN="$HOME/.local/share/nvim/mason/bin/ngserver"
+
+if [ -f "$MASON_BIN" ]; then
+    exec "$MASON_BIN" "$@"
+else
+    echo "Error: Angular Language Server (ngserver) not found. Please install angular-language-server via Mason." >&2
+    exit 1
+fi

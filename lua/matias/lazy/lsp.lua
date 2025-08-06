@@ -54,11 +54,25 @@ return {
 		require("mason").setup({})
 		require("mason-tool-installer").setup({
 			ensure_installed = {
+				-- Language Servers
+				"lua-language-server",
+				"typescript-language-server",
+				"angular-language-server",
+				"json-lsp",
+				"yaml-language-server",
+				"svelte-language-server",
+				"gopls",
+				"csharp-language-server",
+				
+				-- Formatters
 				"prettier",
 				"stylua",
+				"isort",
+				"black",
+				
+				-- Linters
 				"eslint_d",
 				"pylint",
-				"typescript-language-server",
 			},
 		})
 		require("mason-lspconfig").setup({
@@ -76,6 +90,23 @@ return {
 					local lua_opts = lsp_zero.nvim_lua_ls()
 					require("lspconfig").lua_ls.setup(lua_opts)
 				end,
+				tsserver = function()
+					local config_path = vim.fn.stdpath('config')
+					require("lspconfig").tsserver.setup({
+						capabilities = capabilities,
+						cmd = { config_path .. "/bin/typescript-language-server-quiet", "--stdio" },
+						cmd_env = {
+							NODE_NO_WARNINGS = "1"
+						}
+					})
+				end,
+				jsonls = function()
+					local config_path = vim.fn.stdpath('config')
+					require("lspconfig").jsonls.setup({
+						capabilities = capabilities,
+						cmd = { config_path .. "/bin/vscode-json-language-server-quiet", "--stdio" }
+					})
+				end,
 			},
 			-- capabilities = capabilities
 		})
@@ -85,40 +116,67 @@ return {
 			},
 		})
 
-		-- Angular LSP setup
-		local project_root = "/Users/matiaslang/.nvm/versions/node/v20.11.1/lib"
-		local typescript_path = project_root .. "/node_modules/typescript"
-
-		require("lspconfig").angularls.setup({
+		-- Manual C# LSP setup with wrapper
+		local config_path = vim.fn.stdpath('config')
+		require("lspconfig").csharp_ls.setup({
 			capabilities = capabilities,
-			filetypes = { "typescript", "html", "typescriptreact", "typescript.tsx" },
-			cmd = {
-				"ngserver",
-				"--stdio",
-				"--tsProbeLocations",
-				typescript_path,
-				"--ngProbeLocations",
-				project_root,
-			},
-			root_dir = require("lspconfig").util.root_pattern("angular.json", "project.json"),
-			on_new_config = function(new_config, new_root_dir)
-				new_config.cmd = {
-					"ngserver",
+			cmd = { config_path .. "/bin/csharp-ls-wrapper" }
+		})
+
+		-- Angular LSP setup
+		-- Note: This requires Node.js and TypeScript to be installed
+		-- Update the paths below to match your Node.js installation
+		local function setup_angular_lsp()
+			-- Try to find Node.js installation dynamically
+			local node_path = vim.fn.system("which node 2>/dev/null"):gsub("%s+", "")
+			if node_path == "" then
+				print("Warning: Node.js not found. Angular LSP may not work properly.")
+				return
+			end
+			
+			-- Derive lib path from node path
+			local lib_path = node_path:gsub("/bin/node$", "/lib")
+			local typescript_path = lib_path .. "/node_modules/typescript"
+			
+			-- Check if TypeScript is available globally
+			local ts_check = vim.fn.system("test -d " .. typescript_path .. " && echo 'exists'")
+			if ts_check:match("exists") == nil then
+				print("Warning: Global TypeScript not found at " .. typescript_path .. ". Angular LSP may not work properly.")
+			end
+			
+			require("lspconfig").angularls.setup({
+				capabilities = capabilities,
+				filetypes = { "typescript", "html", "typescriptreact", "typescript.tsx" },
+				cmd = {
+					config_path .. "/bin/ngserver",
 					"--stdio",
 					"--tsProbeLocations",
 					typescript_path,
 					"--ngProbeLocations",
-					new_root_dir,
-				}
-			end,
-			settings = {
-				["ng"] = {
-					typescript = {
-						tsdk = typescript_path .. "/lib",
+					lib_path,
+				},
+				root_dir = require("lspconfig").util.root_pattern("angular.json", "project.json"),
+				on_new_config = function(new_config, new_root_dir)
+					new_config.cmd = {
+						config_path .. "/bin/ngserver",
+						"--stdio",
+						"--tsProbeLocations",
+						typescript_path,
+						"--ngProbeLocations",
+						new_root_dir,
+					}
+				end,
+				settings = {
+					["ng"] = {
+						typescript = {
+							tsdk = typescript_path .. "/lib",
+						},
 					},
 				},
-			},
-		})
+			})
+		end
+		
+		setup_angular_lsp()
 
 		-- Setup nvim-cmp
 		local cmp = require("cmp")

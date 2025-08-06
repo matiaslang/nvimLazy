@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Wrapper for typescript-language-server to suppress warnings
+
+# Check if typescript-language-server is available in Mason
+MASON_BIN="$HOME/.local/share/nvim/mason/bin/typescript-language-server"
+
+if [ -f "$MASON_BIN" ]; then
+    NODE_NO_WARNINGS=1 exec "$MASON_BIN" "$@" 2>/dev/null
+else
+    echo "Error: typescript-language-server not found. Please install it via Mason." >&2
+    exit 1
+fi
