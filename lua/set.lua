@@ -13,6 +13,7 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
 vim.opt.wrap = true
+vim.opt.linebreak = true
 
 vim.opt.swapfile = false
 vim.opt.backup = false
@@ -27,3 +28,9 @@ vim.opt.signcolumn = "no"
 vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
+
+-- Shell configuration for proper zsh support
+vim.opt.shell = "/bin/zsh"
+vim.opt.shellcmdflag = "-c"
+vim.opt.shellquote = ""
+vim.opt.shellxquote = ""

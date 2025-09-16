@@ -190,7 +190,7 @@ Before setting up this Neovim configuration, make sure you have the following in
 - **yaml-language-server**: YAML file support
 - **svelte-language-server**: Svelte framework support
 - **gopls**: Go language support
-- **csharp-language-server**: C# language support
+- **OmniSharp** (via csharp.nvim plugin): C# language support with debugging and project management
 
 ### Formatters
 - **prettier**: JavaScript, TypeScript, JSON, YAML, HTML, CSS, Markdown formatting
@@ -229,6 +229,27 @@ The configuration uses `<leader>` as the main prefix (default is space).
 - `<leader>u`: Open undotree
 - `<leader>f`: Format current file/selection
 - `<leader>l`: Trigger linting
+
+### C# Development
+- `<leader>csr`: Run C# project
+- `<leader>csd`: Debug C# project
+- `<leader>csu`: Fix C# usings
+- `<leader>csf`: Fix all C# issues
+- `<leader>css`: View/Edit user secrets
+- `<leader>csg`: Go to definition (with decompilation)
+
+### Debugging (DAP)
+- `<leader>Db`: Toggle breakpoint
+- `<leader>DB`: Set conditional breakpoint
+- `<leader>Dc`: Continue/Start debugging
+- `<leader>Di`: Step into
+- `<leader>Do`: Step over
+- `<leader>DO`: Step out
+- `<leader>Dr`: Restart debugger
+- `<leader>Dt`: Terminate debugger
+- `<leader>Du`: Toggle debug UI
+- `<leader>De`: Evaluate expression
+- `<leader>Dl`: Run last debug session
 
 ## Troubleshooting
 
@@ -275,7 +296,6 @@ To update the configuration:
 │   ├── mappings.lua            # Key mappings
 │   └── set.lua                 # Neovim settings
 ├── bin/                        # Wrapper scripts
-│   ├── csharp-ls-wrapper
 │   ├── typescript-language-server-quiet
 │   └── vscode-json-language-server-quiet
 └── README.md                   # This file

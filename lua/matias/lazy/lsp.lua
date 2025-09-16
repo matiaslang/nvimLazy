@@ -62,14 +62,13 @@ return {
 				"yaml-language-server",
 				"svelte-language-server",
 				"gopls",
-				"csharp-language-server",
-				
+
 				-- Formatters
 				"prettier",
 				"stylua",
 				"isort",
 				"black",
-				
+
 				-- Linters
 				"eslint_d",
 				"pylint",
@@ -91,20 +90,20 @@ return {
 					require("lspconfig").lua_ls.setup(lua_opts)
 				end,
 				tsserver = function()
-					local config_path = vim.fn.stdpath('config')
+					local config_path = vim.fn.stdpath("config")
 					require("lspconfig").tsserver.setup({
 						capabilities = capabilities,
 						cmd = { config_path .. "/bin/typescript-language-server-quiet", "--stdio" },
 						cmd_env = {
-							NODE_NO_WARNINGS = "1"
-						}
+							NODE_NO_WARNINGS = "1",
+						},
 					})
 				end,
 				jsonls = function()
-					local config_path = vim.fn.stdpath('config')
+					local config_path = vim.fn.stdpath("config")
 					require("lspconfig").jsonls.setup({
 						capabilities = capabilities,
-						cmd = { config_path .. "/bin/vscode-json-language-server-quiet", "--stdio" }
+						cmd = { config_path .. "/bin/vscode-json-language-server-quiet", "--stdio" },
 					})
 				end,
 			},
@@ -116,12 +115,6 @@ return {
 			},
 		})
 
-		-- Manual C# LSP setup with wrapper
-		local config_path = vim.fn.stdpath('config')
-		require("lspconfig").csharp_ls.setup({
-			capabilities = capabilities,
-			cmd = { config_path .. "/bin/csharp-ls-wrapper" }
-		})
 
 		-- Angular LSP setup with simplified configuration
 		-- Uses global TypeScript installation
