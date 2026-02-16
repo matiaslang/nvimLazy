@@ -1,59 +1,127 @@
 return {
 	"iabdelkareem/csharp.nvim",
 	dependencies = {
-		"williamboman/mason.nvim", -- Required, automatically installs omnisharp
+		"williamboman/mason.nvim",
 		"mfussenegger/nvim-dap",
-		"Tastyep/structlog.nvim", -- Optional, but highly recommended for debugging
+		"Tastyep/structlog.nvim",
 	},
 	config = function()
-		-- Only setup csharp.nvim, Mason is already setup in lsp.lua
 		require("csharp").setup({
 			lsp = {
-				-- Sets if you want to use omnisharp as your LSP
 				omnisharp = {
-					-- When set to false, csharp.nvim won't launch omnisharp automatically.
 					enable = true,
-					-- When set, csharp.nvim won't install omnisharp automatically. Instead, the omnisharp instance in the cmd_path will be used.
-					cmd_path = nil,
-					-- The default timeout when communicating with omnisharp
 					default_timeout = 1000,
-					-- Settings that'll be passed to the omnisharp server
 					enable_editor_config_support = true,
 					organize_imports = true,
-					load_projects_on_demand = false,
 					enable_analyzers_support = true,
 					enable_import_completion = true,
 					include_prerelease_sdks = true,
-					analyze_open_documents_only = false,
 					enable_package_auto_restore = true,
-					-- Launches omnisharp in debug mode
-					debug = false,
 				},
-				-- Sets if you want to use roslyn as your LSP
 				roslyn = {
-					-- When set to true, csharp.nvim will launch roslyn automatically.
 					enable = false,
-					-- Path to the roslyn LSP see 'Roslyn LSP Specific Prerequisites' above.
-					cmd_path = nil,
 				},
-				-- The capabilities to pass to the omnisharp server
-				capabilities = nil,
-				-- on_attach function that'll be called when the LSP is attached to a buffer
-				on_attach = nil,
+				on_attach = function(client, bufnr)
+					-- Ensure EditorConfig support is enabled for formatting
+					if client and not client.is_stopped() then
+						local config = {
+							settings = {
+								omnisharp = {
+									FormattingOptions = {
+										EnableEditorConfigSupport = true,
+									},
+								},
+							},
+						}
+						client.notify("workspace/didChangeConfiguration", config)
+						vim.notify("OmniSharp EditorConfig support enabled", vim.log.levels.INFO)
+					end
+				end,
 			},
-		logging = {
-			-- The minimum log level.
-			level = "TRACE",
-		},
+			logging = {
+				level = "TRACE",
+			},
 			dap = {
-				-- When set, csharp.nvim won't launch install and debugger automatically. Instead, it'll use the debug adapter specified.
-				--- @type string?
 				adapter_name = nil,
 			},
 		})
 
 		-- Apply fix for shell escaping issues with launch profiles
 		require("matias.csharp-fix").setup()
+
+		-- Debug helper: Check OmniSharp configuration
+		local function check_omnisharp_config()
+			local clients = vim.lsp.get_active_clients({ name = "omnisharp" })
+			if #clients == 0 then
+				vim.notify("OmniSharp is not running. Open a C# file first.", vim.log.levels.WARN)
+				return
+			end
+
+			local client = clients[1]
+			vim.notify("OmniSharp client found", vim.log.levels.INFO)
+			vim.print("Client ID: " .. client.id)
+			vim.print("Client name: " .. client.name)
+			vim.print("Root directory: " .. (client.config.root_dir or "nil"))
+
+			-- Request current configuration
+			client.request("workspace/configuration", {
+				items = { { section = "omnisharp" } },
+			}, function(err, result)
+				if err then
+					vim.notify("Error getting config: " .. vim.inspect(err), vim.log.levels.ERROR)
+					return
+				end
+				vim.print("Current OmniSharp config:")
+				vim.print(vim.inspect(result))
+			end)
+		end
+
+		-- Debug helper: Check if .editorconfig exists
+		local function check_editorconfig()
+			local buf = vim.api.nvim_get_current_buf()
+			local file = vim.api.nvim_buf_get_name(buf)
+			if file == "" then
+				vim.notify("No file open", vim.log.levels.WARN)
+				return
+			end
+
+			local dir = vim.fn.fnamemodify(file, ":h")
+			local editorconfig_path = vim.fn.findfile(".editorconfig", dir .. ";")
+			if editorconfig_path == "" then
+				vim.notify("No .editorconfig found in project", vim.log.levels.WARN)
+				vim.print("Searched from: " .. dir)
+			else
+				vim.notify("Found .editorconfig: " .. editorconfig_path, vim.log.levels.INFO)
+				-- Read and display first few lines
+				local lines = vim.fn.readfile(editorconfig_path)
+				vim.print("\n.editorconfig contents (first 20 lines):")
+				for i = 1, math.min(20, #lines) do
+					vim.print(lines[i])
+				end
+			end
+		end
+
+		-- Debug helper: Manually trigger EditorConfig configuration
+		local function trigger_editorconfig_config()
+			local clients = vim.lsp.get_active_clients({ name = "omnisharp" })
+			if #clients == 0 then
+				vim.notify("OmniSharp is not running. Open a C# file first.", vim.log.levels.WARN)
+				return
+			end
+
+			local client = clients[1]
+			local config = {
+				settings = {
+					omnisharp = {
+						FormattingOptions = {
+							EnableEditorConfigSupport = true,
+						},
+					},
+				},
+			}
+			client.notify("workspace/didChangeConfiguration", config)
+			vim.notify("EditorConfig configuration sent to OmniSharp", vim.log.levels.INFO)
+		end
 
 		-- C# specific key mappings (using <leader>cs* to avoid conflicts)
 		vim.keymap.set("n", "<leader>csr", function()
@@ -70,5 +138,16 @@ return {
 		vim.keymap.set("n", "<leader>csg", function()
 			require("csharp").go_to_definition()
 		end, { desc = "Go to Definition (with decompilation)" })
+
+		-- Debug key mappings
+		vim.keymap.set("n", "<leader>csDc", check_omnisharp_config, { desc = "Debug: Check OmniSharp Config" })
+		vim.keymap.set("n", "<leader>csDe", check_editorconfig, { desc = "Debug: Check .editorconfig" })
+		vim.keymap.set("n", "<leader>csDt", trigger_editorconfig_config, { desc = "Debug: Trigger EditorConfig Config" })
+		vim.keymap.set("n", "<leader>csDl", function()
+			vim.cmd("LspLog")
+		end, { desc = "Debug: Open LSP Log" })
+		vim.keymap.set("n", "<leader>csDi", function()
+			vim.cmd("LspInfo")
+		end, { desc = "Debug: Show LSP Info" })
 	end,
 }

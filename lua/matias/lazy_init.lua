@@ -13,5 +13,9 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
     spec = "matias.lazy",
-    change_detection = { notify = false }
+    change_detection = { notify = false },
+    -- Show notifications for errors and warnings
+    ui = {
+        border = "rounded",
+    },
 })

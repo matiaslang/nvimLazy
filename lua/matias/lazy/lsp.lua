@@ -15,7 +15,6 @@ return {
 		"L3MON4D3/LuaSnip",
 		"saadparwaiz1/cmp_luasnip",
 		"j-hui/fidget.nvim",
-		"mfussenegger/nvim-dap",
 		"jay-babu/mason-nvim-dap.nvim",
 	},
 	config = function()
@@ -26,21 +25,27 @@ return {
 			local opts = { buffer = bufnr, remap = false }
 			lsp_zero.default_keymaps({ buffer = bufnr })
 
-			vim.keymap.set("n", "gd", function()
-				vim.lsp.buf.definition()
-			end, opts)
-			vim.keymap.set("n", "K", function()
-				vim.lsp.buf.hover()
-			end, opts)
-			vim.keymap.set("n", "vca", function()
-				vim.lsp.buf.code_action()
-			end, opts)
-			vim.keymap.set("n", "vrr", function()
-				vim.lsp.buf.references()
-			end, opts)
-			vim.keymap.set("n", "vrn", function()
-				vim.lsp.buf.rename()
-			end, opts)
+			-- Go to definition (both gd and <leader>gd)
+			vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+			vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, { buffer = bufnr, desc = "Go to definition" })
+
+			-- Go to references
+			vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
+			vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, { buffer = bufnr, desc = "Go to references" })
+
+			-- Hover
+			vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+
+			-- Code actions
+			vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr, desc = "Code action" })
+
+			-- Rename
+			vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = bufnr, desc = "Rename symbol" })
+
+			-- Diagnostics
+			vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { buffer = bufnr, desc = "Show diagnostic" })
+			vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { buffer = bufnr, desc = "Previous diagnostic" })
+			vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { buffer = bufnr, desc = "Next diagnostic" })
 		end)
 
 		local capabilities = vim.tbl_deep_extend(
@@ -77,6 +82,7 @@ return {
 		require("mason-lspconfig").setup({
 			ensure_installed = {
 				"angularls",
+				"ts_ls",
 				"gopls",
 				"jsonls",
 				"svelte",
@@ -89,9 +95,9 @@ return {
 					local lua_opts = lsp_zero.nvim_lua_ls()
 					require("lspconfig").lua_ls.setup(lua_opts)
 				end,
-				tsserver = function()
+				ts_ls = function()
 					local config_path = vim.fn.stdpath("config")
-					require("lspconfig").tsserver.setup({
+					require("lspconfig").ts_ls.setup({
 						capabilities = capabilities,
 						cmd = { config_path .. "/bin/typescript-language-server-quiet", "--stdio" },
 						cmd_env = {
@@ -106,6 +112,23 @@ return {
 						cmd = { config_path .. "/bin/vscode-json-language-server-quiet", "--stdio" },
 					})
 				end,
+				angularls = function()
+					require("lspconfig").angularls.setup({
+						capabilities = capabilities,
+						filetypes = { "typescript", "html", "typescriptreact", "typescript.tsx", "htmlangular" },
+						-- Remove root_dir restriction to work in any directory with TS/HTML files
+						root_dir = function(fname)
+							local util = require("lspconfig.util")
+							-- First try to find angular.json (proper Angular project)
+							local angular_root = util.root_pattern("angular.json", "project.json")(fname)
+							if angular_root then
+								return angular_root
+							end
+							-- Fall back to any directory with package.json or git root
+							return util.root_pattern("package.json", ".git")(fname) or vim.fn.getcwd()
+						end,
+					})
+				end,
 			},
 			-- capabilities = capabilities
 		})
@@ -113,15 +136,6 @@ return {
 			ensure_installed = {
 				"chrome",
 			},
-		})
-
-
-		-- Angular LSP setup with simplified configuration
-		-- Uses global TypeScript installation
-		require("lspconfig").angularls.setup({
-			capabilities = capabilities,
-			filetypes = { "typescript", "html", "typescriptreact", "typescript.tsx" },
-			root_dir = require("lspconfig").util.root_pattern("angular.json", "project.json"),
 		})
 
 		-- Setup nvim-cmp
