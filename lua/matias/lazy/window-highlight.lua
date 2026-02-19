@@ -2,12 +2,11 @@ return {
 	"nvim-zh/colorful-winsep.nvim",
 	config = function()
 		require("colorful-winsep").setup({
-			-- No symbols, just colors
 			symbols = { "━", "┃", "┏", "┓", "┗", "┛" },
-			-- Bright colors for active window
+			-- Rose-Pine style: soft pine/rose for active, muted for inactive
 			coloring = {
-				{ "#42f7ff", "Normal" },
-				{ "#606b81", "NormalNC" },
+				{ "#31748f", "Normal" },   -- pine (active)
+				{ "#393552", "NormalNC" }, -- overlay (inactive)
 			},
 			-- Make the separator more prominent
 			create_event = function()

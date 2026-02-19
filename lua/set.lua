@@ -1,4 +1,5 @@
 vim.opt.guicursor = ""
+vim.opt.termguicolors = true  -- true color for themes (e.g. cyberdream)
 
 vim.opt.nu = true
 vim.opt.relativenumber = true
@@ -24,7 +25,8 @@ vim.opt.hlsearch = false
 vim.opt.incsearch = true
 
 vim.opt.scrolloff = 8
-vim.opt.signcolumn = "no"
+vim.opt.signcolumn = "yes:1"   -- one column for signs (LSP/diagnostics), less layout shift
+vim.opt.cursorline = true     -- highlight current line
 vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
