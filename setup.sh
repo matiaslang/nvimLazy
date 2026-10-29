@@ -129,7 +129,7 @@ show_next_steps() {
 check_cli_tools() {
     print_status "Checking essential CLI tools..."
     
-    local cli_tools=("rg" "fd" "fzf" "make")
+    local cli_tools=("rg" "fd" "fzf" "make" "tree-sitter")
     local missing_tools=()
     local available_tools=()
     
@@ -163,6 +163,9 @@ check_cli_tools() {
                 "make")
                     echo "  - make: Required to compile telescope-fzf-native"
                     ;;
+                "tree-sitter")
+                    echo "  - tree-sitter CLI: Required to compile treesitter parsers (nvim-treesitter)"
+                    ;;
             esac
         done
         echo ""
@@ -193,6 +196,15 @@ check_optional_deps() {
     else
         missing_deps+=("typescript")
     fi
+
+    # /usr/bin/java on macOS is a stub. A real JDK 17+ is required for SonarQube.
+    if java -version >/dev/null 2>&1 \
+        || /opt/homebrew/opt/openjdk@21/bin/java -version >/dev/null 2>&1 \
+        || /opt/homebrew/opt/openjdk@17/bin/java -version >/dev/null 2>&1; then
+        available_deps+=("java")
+    else
+        missing_deps+=("java")
+    fi
     
     if [ ${#available_deps[@]} -gt 0 ]; then
         print_success "Available optional dependencies: ${available_deps[*]}"
@@ -215,6 +227,9 @@ check_optional_deps() {
                     ;;
                 "typescript")
                     echo "  - TypeScript: Required for Angular development (install with: npm install -g typescript)"
+                    ;;
+                "java")
+                    echo "  - JDK 17+: Required for SonarQube diagnostics (install with: brew install openjdk@21)"
                     ;;
             esac
         done

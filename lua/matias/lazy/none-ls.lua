@@ -6,12 +6,12 @@ return {
             sources = {
                 null_ls.builtins.formatting.stylua,
                 null_ls.builtins.completion.spell,
+                null_ls.builtins.formatting.prettier.with({
+                    env = {
+                        PRETTIER_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/utils/linter-config/.prettierrc.json"),
+                    },
+                }),
             },
-            null_ls.builtins.formatting.prettier.with({
-                env = {
-                    PRETTIER_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/utils/linter-config/.prettierrc.json"),
-                },
-            }),
         })
     end,
 }

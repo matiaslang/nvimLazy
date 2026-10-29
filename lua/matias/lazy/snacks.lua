@@ -75,12 +75,14 @@ return{
     { "<leader>sR", function() Snacks.picker.resume() end, desc = "Resume" },
     { "<leader>su", function() Snacks.picker.undo() end, desc = "Undo History" },
     { "<leader>uC", function() Snacks.picker.colorschemes() end, desc = "Colorschemes" },
-    -- LSP
-    { "gd", function() Snacks.picker.lsp_definitions() end, desc = "Goto Definition" },
-    { "gD", function() Snacks.picker.lsp_declarations() end, desc = "Goto Declaration" },
-    { "gr", function() Snacks.picker.lsp_references() end, nowait = true, desc = "References" },
-    { "gI", function() Snacks.picker.lsp_implementations() end, desc = "Goto Implementation" },
-    { "gy", function() Snacks.picker.lsp_type_definitions() end, desc = "Goto T[y]pe Definition" },
+    -- LSP (pickers on <leader> — do not bind `gd`/`gr`/etc. here: those keys must stay
+    -- available for buffer-local LSP maps from lsp.lua. Snacks' global `gd` was overriding
+    -- Angular-specific go-to-definition and made fixes appear to "do nothing".)
+    { "<leader>lfd", function() Snacks.picker.lsp_definitions() end, desc = "LSP definitions (picker)" },
+    { "<leader>lfc", function() Snacks.picker.lsp_declarations() end, desc = "LSP declarations (picker)" },
+    { "<leader>lfr", function() Snacks.picker.lsp_references() end, desc = "LSP references (picker)" },
+    { "<leader>lfi", function() Snacks.picker.lsp_implementations() end, desc = "LSP implementations (picker)" },
+    { "<leader>lfy", function() Snacks.picker.lsp_type_definitions() end, desc = "LSP type definitions (picker)" },
     { "<leader>ss", function() Snacks.picker.lsp_symbols() end, desc = "LSP Symbols" },
     { "<leader>sS", function() Snacks.picker.lsp_workspace_symbols() end, desc = "LSP Workspace Symbols" },
     -- Other
