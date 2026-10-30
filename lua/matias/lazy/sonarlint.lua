@@ -1,5 +1,5 @@
 local connection_id = "string"
-local server_url = "string"
+local server_url = "sting"
 
 local filetypes = {
 	"javascript",
@@ -115,13 +115,15 @@ end
 local function java_executable()
 	local home = vim.fn.getenv("JAVA_HOME")
 	local candidates = {
-		type(home) == "string" and home .. "/bin/java" or nil,
 		"/opt/homebrew/opt/openjdk@21/bin/java",
 		"/opt/homebrew/opt/openjdk@17/bin/java",
 		"/opt/homebrew/opt/openjdk/bin/java",
 		"/usr/local/opt/openjdk@21/bin/java",
 		"/usr/local/opt/openjdk@17/bin/java",
 	}
+	if type(home) == "string" and home ~= "" then
+		table.insert(candidates, 1, home .. "/bin/java")
+	end
 	for _, path in ipairs(candidates) do
 		if path and vim.fn.executable(path) == 1 then
 			return path
@@ -144,8 +146,16 @@ local function analyzer_jars(dir)
 	for name, typ in vim.fs.dir(dir) do
 		local lower = name:lower()
 		local skip = lower:find("cfamily", 1, true) or lower:find("cpp", 1, true)
-		if typ == "file" and name:sub(-4) == ".jar" and not skip then
-			jars[#jars + 1] = dir .. "/" .. name
+		-- Mason publishes these jars as symlinks. vim.fs.dir reports those as
+		-- "link", so a "file"-only check finds nothing and the server never starts.
+		local path = dir .. "/" .. name
+		if
+			(typ == "file" or typ == "link")
+			and name:sub(-4) == ".jar"
+			and not skip
+			and vim.fn.filereadable(path) == 1
+		then
+			jars[#jars + 1] = path
 		end
 	end
 	table.sort(jars)
@@ -176,7 +186,7 @@ end
 
 return {
 	"https://gitlab.com/schrieveslaach/sonarlint.nvim",
-	event = { "BufReadPre", "BufNewFile" },
+	ft = filetypes,
 	dependencies = {
 		"neovim/nvim-lspconfig",
 		"williamboman/mason.nvim",
@@ -283,7 +293,12 @@ return {
 
 		local ft = vim.bo.filetype
 		if vim.tbl_contains(filetypes, ft) then
-			vim.api.nvim_exec_autocmds("FileType", { buffer = vim.api.nvim_get_current_buf() })
+			-- Lazy loads this plugin from a FileType event. Replaying that event
+			-- synchronously is ignored while the original callback is running,
+			-- so defer it until Lazy's handler has returned.
+			vim.schedule(function()
+				vim.api.nvim_exec_autocmds("FileType", { buffer = vim.api.nvim_get_current_buf() })
+			end)
 		end
 	end,
 }
